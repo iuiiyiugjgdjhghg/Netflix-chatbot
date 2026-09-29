@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netflix Assistant</title>
+<style>
+  body{font-family:Arial,sans-serif;background:#111;color:#fff;margin:0;padding:20px}
+  .app{max-width:850px;margin:auto;background:#181818;border-radius:18px;padding:24px;box-shadow:0 10px 35px #0008}
+  h1{color:#e50914;margin:0 0 6px}
+  .sub{color:#bbb;margin-bottom:20px}
+  #chat{height:430px;overflow-y:auto;background:#0d0d0d;border-radius:12px;padding:16px}
+  .msg{margin:10px 0;padding:11px 14px;border-radius:12px;max-width:82%;line-height:1.45}
+  .user{background:#333;margin-left:auto}
+  .bot{background:#e50914;margin-right:auto}
+  .controls{display:flex;gap:8px;margin-top:14px}
+  input{flex:1;padding:14px;border-radius:10px;border:1px solid #444;background:#222;color:#fff}
+  button{border:0;border-radius:10px;padding:12px 16px;cursor:pointer;font-weight:bold}
+  #send{background:#e50914;color:#fff}
+  #mic{background:#fff;color:#111}
+  #voice{background:#444;color:#fff}
+  .hint{color:#999;font-size:13px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Netflix Assistant</h1>
+  <div class="sub">Chatbot especializado en nuestro proyecto de Netflix</div>
+  <div id="chat">
+    <div class="msg bot">Hola. Soy Netflix Assistant. Puedo responder preguntas sobre nuestro proyecto de Netflix. También puedo leer mis respuestas en voz alta. </div>
+  </div>
+  <div class="controls">
+    <input id="question" placeholder="Escribe tu pregunta..." autocomplete="off">
+    <button id="send">Enviar</button>
+    <button id="mic">Hablar</button>
+    <button id="voice">Voz: ON</button>
+  </div>
+  <div class="hint">Las recomendaciones de Netflix Duo corresponden a la propuesta de nuestro proyecto y no deben interpretarse como un plan comercial oficial de Netflix. La voz está configurada para buscar una voz masculina con acento argentino. Ejemplos: “¿Cuál es el mercado meta?”, “¿Qué problemas encontramos?”, “¿Qué estrategia utiliza Netflix?”</div>
+</div>
+
+<script>
+const knowledge = [
+  {keys:["necesidad","necesidades"], answer:"La necesidad principal que satisface Netflix es el entretenimiento. Ofrece acceso a contenido variado, cómodo, flexible y personalizado desde diferentes dispositivos."},
+  {keys:["deseo"], answer:"El deseo se relaciona con el tipo específico de contenido que una persona quiere consumir, por ejemplo películas, series, documentales o contenido de determinado género."},
+  {keys:["demanda"], answer:"La demanda ocurre cuando el consumidor, además de tener una necesidad o deseo, tiene la disposición y capacidad de pagar por una suscripción de Netflix."},
+  {keys:["necesidad deseo demanda"], answer:"La necesidad es el entretenimiento; el deseo es el contenido específico que el consumidor quiere ver; y la demanda ocurre cuando tiene la disposición y capacidad de pagar por el servicio."},
+  {keys:["mercado meta","mercado objetivo"], answer:"El mercado meta está compuesto por consumidores que buscan entretenimiento bajo demanda, variedad de contenido y acceso flexible desde diferentes dispositivos. Dentro del análisis se consideran variables como edad, preferencias de contenido y hábitos de consumo."},
+  {keys:["problemas","problemáticas","problema"], answer:"Los principales problemas identificados en el proyecto fueron los aumentos de precio, la falta de ciertos contenidos y la dificultad que tienen algunos usuarios para decidir qué ver."},
+  {keys:["estrategia","estrategias"], answer:"Entre las estrategias analizadas están la personalización, segmentación, promoción, branding, diferenciación y fidelización de clientes."},
+  {keys:["marketing"], answer:"Netflix utiliza estrategias de marketing digital, personalización de contenido, recomendaciones basadas en datos, promoción en redes sociales, branding y acciones de fidelización."},
+  {keys:["análisis interno","analisis interno"], answer:"El análisis interno considera los recursos y capacidades de Netflix, sus procesos, productos y servicios, tecnología e innovación, cultura y estructura organizacional, además de sus fortalezas y debilidades."},
+  {keys:["fortalezas"], answer:"Entre las fortalezas analizadas se encuentran su reconocimiento de marca, plataforma tecnológica, variedad de contenido, personalización y capacidad para utilizar datos de sus usuarios."},
+  {keys:["debilidades"], answer:"Entre las debilidades consideradas en el proyecto están los aumentos de precio, la percepción de falta de ciertos contenidos y la dificultad de algunos usuarios para elegir qué ver."},
+  {keys:["foda"], answer:"El FODA permite organizar las fortalezas y debilidades internas de Netflix junto con oportunidades y amenazas externas. En el proyecto se utiliza para entender la situación de la empresa y apoyar la definición de estrategias."},
+  {keys:["ventaja competitiva"], answer:"La ventaja competitiva analizada se relaciona con la combinación de una marca reconocida, tecnología, personalización, uso de datos y una amplia oferta de entretenimiento."},
+  {keys:["propuesta de valor"], answer:"La propuesta de valor de Netflix se basa en ofrecer entretenimiento bajo demanda, con variedad de contenido, facilidad de acceso, personalización y disponibilidad en diferentes dispositivos."},
+  {keys:["encuesta","investigación"], answer:"La investigación incluyó preguntas orientadas a conocer las preferencias y hábitos de los usuarios, como consumo de contenido, precio, variedad, calidad, relevancia de las recomendaciones y uso de diferentes dispositivos."},
+  {keys:["cancelaciones","cancelación"], answer:"Uno de los objetivos planteados es reducir las cancelaciones mediante una mejor experiencia del usuario, contenido relevante, personalización y estrategias de fidelización."},
+  {keys:["contenido mexicano"], answer:"Uno de los objetivos planteados es aumentar el consumo de contenido mexicano, buscando generar mayor interés y participación de este tipo de contenido dentro de la plataforma."},
+  {keys:["elegir","tiempo para elegir","decidir qué ver"], answer:"Otro objetivo planteado es reducir el tiempo que tarda el usuario en decidir qué ver, principalmente mediante mejores recomendaciones y personalización."},
+  {keys:["producto","servicio"], answer:"Netflix ofrece un servicio de entretenimiento por suscripción que permite acceder a películas, series, documentales y otros contenidos desde distintos dispositivos."},
+  {keys:["novio","novia","pareja","parejas","distancia","lejos","otra ciudad","fuera de la ciudad","a distancia"], answer:"Si quieres ver una película al mismo tiempo que tu pareja aunque estén en ciudades diferentes, dentro de la propuesta de nuestro proyecto te recomendaría Netflix Duo. Está pensado para dos personas vinculadas al plan que quieren disfrutar contenido simultáneamente, aunque estén en lugares distintos. El precio de lanzamiento planteado en el proyecto es de $169 y después sería de $199 al mes."},
+  {keys:["amigos","amigo","amiga","amigas","familia","hermano","hermana"], answer:"Si quieres compartir una película o serie con otra persona que está en otro lugar, dentro de la propuesta de nuestro proyecto Netflix Duo sería una opción adecuada, porque permite que dos personas vinculadas al plan vean contenido al mismo tiempo desde ubicaciones diferentes. El precio de lanzamiento planteado es de $169 y después sería de $199 al mes."},
+  {keys:["que plan me recomiendas","qué plan me recomiendas","recomiendame un plan","recomiéndame un plan","qué plan","que plan"], answer:"Depende de lo que busques. Si quieres ver contenido simultáneamente con otra persona que está en otra ciudad o lugar, te recomendaría Netflix Duo dentro de la propuesta de nuestro proyecto. Tiene un precio de lanzamiento de $169 y posteriormente de $199 al mes."},
+  {keys:["ver juntos","ver al mismo tiempo","pelicula juntos","película juntos","serie juntos","ver una pelicula juntos","ver una película juntos"], answer:"Si quieren ver una película o serie al mismo tiempo aunque estén en lugares diferentes, la recomendación dentro de nuestro proyecto es Netflix Duo. El concepto del plan está diseñado para dos personas vinculadas que quieren compartir la experiencia de ver contenido simultáneamente. El precio de lanzamiento planteado es de $169 y después de $199 al mes."},
+  {keys:["pelicula romantica","película romántica","peliculas para pareja","películas para pareja","que pelicula","qué película"], answer:"Si quieres una recomendación para una cita a distancia, primero elegiría una película según sus gustos. Para compartir la experiencia, dentro de nuestro proyecto recomendaría Netflix Duo, ya que permite que las dos personas vinculadas vean el contenido al mismo tiempo aunque estén en lugares diferentes. El plan tendría un precio de lanzamiento de $169 y después de $199 al mes."},
+  {keys:["precio duo","precio del duo","cuanto cuesta duo","cuánto cuesta duo","169","199"], answer:"Dentro de la propuesta de nuestro proyecto, Netflix Duo tendría un precio de lanzamiento de $169 y posteriormente un precio mensual de $199. La propuesta está enfocada en dos personas vinculadas que quieren ver contenido simultáneamente desde diferentes lugares."},
+  {keys:["consumidor","consumidores"], answer:"El análisis del consumidor considera sus necesidades, deseos, hábitos de consumo, preferencias de contenido, percepción del precio y experiencia con la plataforma."}
+];
+
+function normalize(s){
+  return s.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
+}
+function getAnswer(q){
+  const n=normalize(q);
+  let best=null, score=0;
+  for(const item of knowledge){
+    let sc=0;
+    for(const k of item.keys){
+      const parts=normalize(k).split(" ");
+      const hit=parts.filter(p=>n.includes(p)).length;
+      sc=Math.max(sc, hit/parts.length);
+    }
+    if(sc>score){score=sc;best=item.answer;}
+  }
+  if(score>=0.5) return best;
+  // Recommendation patterns: the chatbot can infer common customer situations
+  // and recommend the Duo proposal without requiring an exact keyword match.
+  if(/(pareja|novio|novia|amigo|amiga|familia|hermano|hermana)/.test(n) &&
+     /(lejos|distancia|ciudad|lugar|juntos|simult|ver)/.test(n)){
+    return "Por la situación que describes, dentro de la propuesta de nuestro proyecto te recomendaría Netflix Duo. Está pensado para dos personas vinculadas que quieren ver una película o serie al mismo tiempo aunque estén en lugares diferentes. El precio de lanzamiento planteado es de $169 y después sería de $199 al mes.";
+  }
+  return "Esa información no está incluida en el proyecto de Netflix. Puedo responder preguntas y dar recomendaciones relacionadas con el proyecto, por ejemplo sobre consumidores, mercado meta, encuesta, FODA, estrategias, propuesta de valor, problemas, objetivos y la propuesta de Netflix Duo.";
+}
+
+let voiceOn=true;
+function speak(text){
+  if(!voiceOn || !("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="es-AR";
+  u.rate=0.92;
+  u.pitch=0.92;
+  u.volume=1;
+
+  // Busca una voz masculina en español argentino o, como alternativa,
+  // una voz masculina en español. La voz exacta depende de las voces
+  // instaladas/disponibles en el navegador.
+  const voices=speechSynthesis.getVoices();
+  const preferred=voices.find(v =>
+    /es-AR/i.test(v.lang) &&
+    /male|masculina|hombre/i.test(v.name)
+  ) || voices.find(v =>
+    /es-AR/i.test(v.lang)
+  ) || voices.find(v =>
+    /^es(-|_)/i.test(v.lang) &&
+    /male|masculina|hombre/i.test(v.name)
+  ) || voices.find(v => /^es(-|_)/i.test(v.lang));
+
+  if(preferred) u.voice=preferred;
+  speechSynthesis.speak(u);
+}
+function add(text, cls){
+  const d=document.createElement("div");
+  d.className="msg "+cls; d.textContent=text;
+  document.getElementById("chat").appendChild(d);
+  document.getElementById("chat").scrollTop=999999;
+}
+function send(){
+  const input=document.getElementById("question");
+  const q=input.value.trim();
+  if(!q)return;
+  add(q,"user");
+  const a=getAnswer(q);
+  add(a,"bot");
+  speak(a);
+  input.value="";
+}
+document.getElementById("send").onclick=send;
+document.getElementById("question").addEventListener("keydown",e=>{if(e.key==="Enter")send();});
+document.getElementById("voice").onclick=()=>{
+  voiceOn=!voiceOn;
+  document.getElementById("voice").textContent=voiceOn?"Voz: ON":"Voz: OFF";
+};
+
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SpeechRecognition){
+  const rec=new SpeechRecognition();
+  rec.lang="es-MX"; rec.interimResults=false;
+  document.getElementById("mic").onclick=()=>{
+    rec.start();
+    document.getElementById("mic").textContent=" Escuchando...";
+  };
+  rec.onresult=e=>{
+    document.getElementById("question").value=e.results[0][0].transcript;
+    document.getElementById("mic").textContent="Hablar";
+    send();
+  };
+  rec.onerror=()=>document.getElementById("mic").textContent="Hablar";
+  rec.onend=()=>document.getElementById("mic").textContent="Hablar";
+}else{
+  document.getElementById("mic").disabled=true;
+  document.getElementById("mic").textContent="No disponible";
+}
+</script>
+</body>
+</html>
